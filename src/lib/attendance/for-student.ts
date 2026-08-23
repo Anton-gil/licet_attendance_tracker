@@ -20,7 +20,7 @@ import { addDays, todayIST } from "@/lib/date/ist";
 import type { CalendarEntry, OverrideEntry } from "@/lib/date/types";
 import { computeAttendance } from "./compute";
 import type { Bundle, Membership } from "./resolve-days";
-import { resolveDaysInRange } from "./resolve-days";
+import { hasUncertainConfidence, resolveDaysInRange } from "./resolve-days";
 import type { AttendanceResult, ExceptionStatus } from "./types";
 
 const GROUP_OVERRIDE_CONFIRMATIONS_REQUIRED = 2;
@@ -34,6 +34,8 @@ export type StudentDashboardData = {
   remaining: PeriodTally;
   asOf: string;
   semesterStart: string;
+  /** True if any day counted so far came from the borrowed/inferred/guessed rungs of the fallback chain — drives the "working days assumed" disclaimer (spec §10). */
+  calendarConfidenceIsUncertain: boolean;
 };
 
 /**
@@ -62,6 +64,7 @@ export async function getStudentDashboardData(
       remaining: { overall: 0, perCourse: {} },
       asOf: clampedAsOf,
       semesterStart,
+      calendarConfidenceIsUncertain: false,
     };
   }
 
@@ -101,7 +104,13 @@ export async function getStudentDashboardData(
     }
   }
 
-  return { attendance, remaining, asOf: clampedAsOf, semesterStart };
+  return {
+    attendance,
+    remaining,
+    asOf: clampedAsOf,
+    semesterStart,
+    calendarConfidenceIsUncertain: hasUncertainConfidence(pastDays),
+  };
 }
 
 // ---------------------------------------------------------------------------

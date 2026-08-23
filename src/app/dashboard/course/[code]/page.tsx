@@ -4,12 +4,13 @@ import { requireStudent } from "@/lib/auth/require-student";
 import { getStudentDashboardData } from "@/lib/attendance/for-student";
 import { canMissBudget, canMissBuffer, recover } from "@/lib/attendance/recovery";
 import { todayIST } from "@/lib/date/ist";
+import { CONFIDENCE_DISCLAIMER, FULL_DISCLAIMER } from "@/lib/disclaimers";
 
 export default async function CourseDetailPage({ params }: { params: Promise<{ code: string }> }) {
   const student = await requireStudent();
   const { code } = await params;
 
-  const { attendance, remaining } = await getStudentDashboardData(student, todayIST());
+  const { attendance, remaining, calendarConfidenceIsUncertain } = await getStudentDashboardData(student, todayIST());
   const stats = attendance.courses[code];
   if (!stats) notFound();
 
@@ -32,6 +33,7 @@ export default async function CourseDetailPage({ params }: { params: Promise<{ c
       </Link>
       <h1 className="mt-2 text-xl font-semibold">{code}</h1>
       <p className="text-3xl font-semibold">{stats.percentage === null ? "—" : `${stats.percentage.toFixed(1)}%`}</p>
+      {calendarConfidenceIsUncertain && <p className="mt-0.5 text-xs text-amber-700">{CONFIDENCE_DISCLAIMER}</p>}
       <p className="mt-1 text-sm text-gray-600">
         {stats.present} present of {stats.conducted} conducted ({stats.absent} absent, {stats.od} OD).
       </p>
@@ -63,7 +65,7 @@ export default async function CourseDetailPage({ params }: { params: Promise<{ c
         )}
       </div>
 
-      <p className="mt-6 text-xs text-gray-400">Estimate based on your timetable. Not official.</p>
+      <p className="mt-6 text-xs text-gray-400">{FULL_DISCLAIMER}</p>
     </main>
   );
 }

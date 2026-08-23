@@ -76,8 +76,20 @@ export function resolveDaysInRange(bundle: Bundle, fromDate: string, toDate: str
               : null,
       }));
 
-    days.push({ date, slots });
+    days.push({ date, slots, confidence: resolution.confidence });
   }
 
   return days;
+}
+
+/**
+ * True if any day's confidence came from the lower rungs of the fallback
+ * chain — borrowed/inferred/guessed (spec §7.2). `exact` (a personal or
+ * confirmed group override) and `official` don't count: an override is the
+ * student's own correction, not uncertainty, and `official` is the real
+ * seeded calendar. Drives the "working days assumed from the academic
+ * calendar" disclaimer (spec §10) — surface it, don't gate on it.
+ */
+export function hasUncertainConfidence(days: ResolvedDay[]): boolean {
+  return days.some((d) => d.confidence === "borrowed" || d.confidence === "inferred" || d.confidence === "guessed");
 }

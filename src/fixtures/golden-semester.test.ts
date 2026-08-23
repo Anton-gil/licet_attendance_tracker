@@ -30,7 +30,7 @@ describe("golden semester fixture — calendar seed × golden timetable, zero ab
   const days: ResolvedDay[] = instructionDates.map((date) => {
     const dow = isoWeekday(date);
     const slots = GOLDEN_TIMETABLE.filter((s) => s.day === dow).map((s) => ({ period: s.period, courseCode: s.code }));
-    return { date, slots };
+    return { date, slots, confidence: "official" as const };
   });
 
   const result = computeAttendance(days, () => null, { includeOdAsPresent: true });

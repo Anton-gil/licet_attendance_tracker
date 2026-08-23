@@ -1,3 +1,5 @@
+import type { DateConfidence } from "@/lib/date/types";
+
 /** A timetable slot already resolved for one specific instruction date — electives resolved to the student's actual choice, kind collapsed to whether it has a course code or not (spec §3: activity/admin count overall only). */
 export type ResolvedSlot = {
   period: number;
@@ -9,6 +11,8 @@ export type ResolvedSlot = {
 export type ResolvedDay = {
   date: string;
   slots: ResolvedSlot[];
+  /** The date resolver's confidence for this day (spec §7.2) — carried through so callers can decide whether to show the "working days assumed" disclaimer (spec §10), without re-resolving the date. */
+  confidence: DateConfidence;
 };
 
 export type ExceptionStatus = "absent" | "od";

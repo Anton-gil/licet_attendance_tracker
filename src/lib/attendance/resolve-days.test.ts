@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { findMembershipForDate, resolveDaysInRange, type Bundle, type Membership } from "./resolve-days";
+import { findMembershipForDate, hasUncertainConfidence, resolveDaysInRange, type Bundle, type Membership } from "./resolve-days";
+import type { ResolvedDay } from "./types";
 
 function membership(groupId: string, validFrom: string, validTo: string | null): Membership {
   return { id: `m-${groupId}`, studentId: "s1", groupId, validFrom, validTo } as Membership;
@@ -104,5 +105,29 @@ describe("orphaned exceptions survive a calendar flip (spec §20, invariant 4)",
     const days = resolveDaysInRange(baseBundle("instruction"), "2026-09-12", "2026-09-12");
     expect(days).toHaveLength(1);
     expect(days[0].slots).toEqual([{ period: 1, courseCode: "CS24512" }]);
+  });
+});
+
+function day(confidence: ResolvedDay["confidence"]): ResolvedDay {
+  return { date: "2026-08-24", slots: [], confidence };
+}
+
+describe("hasUncertainConfidence (drives the §10 'working days assumed' disclaimer)", () => {
+  it("is false when every day is official", () => {
+    expect(hasUncertainConfidence([day("official"), day("official")])).toBe(false);
+  });
+
+  it("is false for exact — a personal/group override is a correction, not uncertainty", () => {
+    expect(hasUncertainConfidence([day("exact"), day("official")])).toBe(false);
+  });
+
+  it("is true if even one day is borrowed, inferred, or guessed", () => {
+    expect(hasUncertainConfidence([day("official"), day("borrowed")])).toBe(true);
+    expect(hasUncertainConfidence([day("inferred")])).toBe(true);
+    expect(hasUncertainConfidence([day("guessed")])).toBe(true);
+  });
+
+  it("is false for an empty day list", () => {
+    expect(hasUncertainConfidence([])).toBe(false);
   });
 });

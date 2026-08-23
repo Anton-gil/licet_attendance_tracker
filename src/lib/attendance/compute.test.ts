@@ -5,6 +5,7 @@ import type { ExceptionStatus, ResolvedDay } from "./types";
 const DAYS: ResolvedDay[] = [
   {
     date: "2026-08-24",
+    confidence: "official",
     slots: [
       { period: 1, courseCode: "AD24501" },
       { period: 2, courseCode: null }, // ABSL
@@ -12,6 +13,7 @@ const DAYS: ResolvedDay[] = [
   },
   {
     date: "2026-08-25",
+    confidence: "official",
     slots: [
       { period: 1, courseCode: "AD24501" },
       { period: 2, courseCode: null }, // MENTORING
@@ -57,7 +59,7 @@ describe("computeAttendance (spec §6)", () => {
   });
 
   it("a zero-absence student shows exactly 100% (pre-launch checklist, spec §18)", () => {
-    const days: ResolvedDay[] = [{ date: "2026-08-24", slots: [{ period: 1, courseCode: "CS24512" }] }];
+    const days: ResolvedDay[] = [{ date: "2026-08-24", confidence: "official", slots: [{ period: 1, courseCode: "CS24512" }] }];
     const result = computeAttendance(days, () => null, { includeOdAsPresent: true });
     expect(result.overall.percentage).toBe(100);
     expect(result.courses.CS24512.percentage).toBe(100);

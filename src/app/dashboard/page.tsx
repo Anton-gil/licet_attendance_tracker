@@ -6,8 +6,10 @@ import { requireStudent } from "@/lib/auth/require-student";
 import { getStudentDashboardData } from "@/lib/attendance/for-student";
 import { canMissBuffer } from "@/lib/attendance/recovery";
 import { riskState } from "@/lib/attendance/risk";
+import { findUnresolvedElectiveGroupIds } from "@/lib/attendance/electives";
 import { todayIST } from "@/lib/date/ist";
 import { redirect } from "next/navigation";
+import { CONFIDENCE_DISCLAIMER, DASHBOARD_DISCLAIMER } from "@/lib/disclaimers";
 import { OdToggle } from "./od-toggle";
 
 const RISK_STYLE: Record<string, string> = {
@@ -22,7 +24,7 @@ export default async function DashboardPage() {
 
   const today = todayIST();
   const active = await db
-    .select({ id: groupMembership.id })
+    .select({ groupId: groupMembership.groupId })
     .from(groupMembership)
     .where(
       and(
@@ -34,7 +36,14 @@ export default async function DashboardPage() {
     .limit(1);
   if (!active[0]) redirect("/onboarding");
 
-  const { attendance, remaining, asOf } = await getStudentDashboardData(student, today);
+  // Elective selection is not optional (spec §4) — PE-1 alone is ~12% of
+  // the semester, and an unpicked elective silently disappears into
+  // "Other" with no course percentage at all. Block the dashboard, not
+  // just nudge, until it's resolved.
+  const unresolved = await findUnresolvedElectiveGroupIds(student.id, active[0].groupId);
+  if (unresolved.length > 0) redirect(`/onboarding/electives?groupId=${active[0].groupId}`);
+
+  const { attendance, remaining, asOf, calendarConfidenceIsUncertain } = await getStudentDashboardData(student, today);
   const target = student.threshold;
 
   const overallRisk = riskState(attendance.overall.percentage, attendance.overall.present, attendance.overall.conducted, target);
@@ -58,6 +67,7 @@ export default async function DashboardPage() {
           </p>
           <p className="text-sm text-gray-500">overall · target {target}%</p>
         </div>
+        {calendarConfidenceIsUncertain && <p className="mt-0.5 text-xs text-amber-700">{CONFIDENCE_DISCLAIMER}</p>}
         <p className="mt-1 text-sm text-gray-600">
           {attendance.overall.percentage === null
             ? "No instruction days recorded yet."
@@ -94,9 +104,7 @@ export default async function DashboardPage() {
       </ul>
 
       <p className="text-xs text-gray-400">
-        Estimate based on your timetable and the published academic calendar, as of {asOf}. Working days, holidays
-        and exam dates are assumed and may have changed — substitutions and cancelled classes aren&apos;t tracked,
-        so your official attendance will differ. {remaining.overall} instruction periods left this semester.
+        {DASHBOARD_DISCLAIMER} As of {asOf}, {remaining.overall} instruction periods left this semester.
       </p>
     </main>
   );

@@ -4,6 +4,7 @@ import { groupMembership } from "@/db/schema";
 import { and, eq, gte, isNull, lte, or } from "drizzle-orm";
 import { todayIST } from "@/lib/date/ist";
 import { redirect } from "next/navigation";
+import { FULL_DISCLAIMER } from "@/lib/disclaimers";
 import { joinOrCreateGroup } from "./actions";
 
 export default async function OnboardingPage() {
@@ -44,6 +45,7 @@ export default async function OnboardingPage() {
           Continue
         </button>
       </form>
+      <p className="text-xs text-gray-400">{FULL_DISCLAIMER}</p>
     </main>
   );
 }
