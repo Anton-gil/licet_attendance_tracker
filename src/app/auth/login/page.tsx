@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { LoginForm } from "./login-form";
 
 export default async function LoginPage({
@@ -23,6 +24,15 @@ export default async function LoginPage({
       {error === "link" && (
         <p className="rounded bg-amber-50 px-3 py-2 text-sm text-amber-800">
           That link has expired or was already used — try again.
+        </p>
+      )}
+      {error === "expired" && (
+        <p className="rounded bg-amber-50 px-3 py-2 text-sm text-amber-800">
+          That confirmation link expired.{" "}
+          <Link href="/auth/resend-confirmation" className="font-medium underline">
+            Get a new one
+          </Link>
+          .
         </p>
       )}
       {confirmed === "1" && (
