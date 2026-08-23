@@ -1,0 +1,1 @@
+CREATE POLICY "student_insert_own" ON "student" AS PERMISSIVE FOR INSERT TO "authenticated" WITH CHECK ((select auth.uid()) = "student"."id");

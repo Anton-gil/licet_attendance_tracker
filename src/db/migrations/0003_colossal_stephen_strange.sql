@@ -1,0 +1,2 @@
+ALTER TABLE "attendance_exception" ADD CONSTRAINT "period_range" CHECK ("attendance_exception"."period" between 1 and 8);--> statement-breakpoint
+ALTER TABLE "attendance_exception" ADD CONSTRAINT "sane_date" CHECK ("attendance_exception"."date" between '2020-01-01' and '2035-01-01');
